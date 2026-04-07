@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1a73e8">
-    <title>Calculadora de Kilómetros Pro</title>
+    <title>Calculadora de KilÃ³metros Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://via.placeholder.com/192/1a73e8/ffffff?text=KM">
     
@@ -49,7 +49,7 @@
 <body>
 
 <div class="card">
-    <h2>Calculadora de kilómetros</h2>
+    <h2>Calculadora de kilÃ³metros</h2>
     
     <div class="input-box">
         <label>CANTIDAD DE LITROS</label>
@@ -68,12 +68,12 @@
         </div>
         
         <div class="result-box">
-            <span class="result-label">KM SEGÚN LITROS (ENTERO)</span>
+            <span class="result-label">KM SEGÃšN LITROS (ENTERO)</span>
             <div id="outputKm" class="result-value">0</div>
         </div>
 
         <div class="result-box res-estimado">
-            <span class="result-label">DÍAS ESTIMADOS (45 KM/DÍA)</span>
+            <span class="result-label">DÃAS ESTIMADOS (45 KM/DÃA)</span>
             <div id="outputDias" class="result-value val-dias">0.0</div>
         </div>
     </div>
@@ -91,7 +91,7 @@
                 <th>Fecha Completa</th>
                 <th>Litros</th>
                 <th>Km/Litros</th>
-                <th>Días Est.</th>
+                <th>DÃ­as Est.</th>
                 <th>Suma Total</th>
             </tr>
         </thead>
@@ -144,7 +144,7 @@
             fecha: obtenerFechaCompleta(),
             litros: litros + " L",
             kmLitros: kmCalculadosEntero + " km",
-            dias: diasEstimados + " días",
+            dias: diasEstimados + " dÃ­as",
             total: kmFinalesSuma + " km"
         };
 
@@ -174,7 +174,7 @@
     }
 
     function borrarTodo() {
-        if (confirm("¿Borrar todo el historial?")) {
+        if (confirm("Â¿Borrar todo el historial?")) {
             localStorage.removeItem('historialKm');
             mostrarRegistros();
         }
@@ -183,7 +183,7 @@
     function compartir() {
         if (kmCalculadosEntero === 0) return alert("Calcula algo primero.");
         const litros = document.getElementById('inputLitros').value;
-        const texto = ` *REGISTRO KM*\n\n *Fecha:* ${obtenerFechaCompleta()}\n *Litros:* ${litros} L\n *Km:* ${kmCalculadosEntero} km\n *Duración:* ${diasEstimados} días\n *SUMA TOTAL:* ${kmFinalesSuma} km`;
+        const texto = ` *REGISTRO KM*\n\n *Fecha:* ${obtenerFechaCompleta()}\n *Litros:* ${litros} L\n *Km:* ${kmCalculadosEntero} km\n *DuraciÃ³n:* ${diasEstimados} dÃ­as\n *SUMA TOTAL:* ${kmFinalesSuma} km`;
         
         if (navigator.share) {
             navigator.share({ title: 'Mis Km', text: texto });
