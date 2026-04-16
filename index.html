@@ -110,10 +110,18 @@
     let diasEstimados = 0;
     let fechaLimiteTxt = "";
 
+    // FUNCIÓN DE FORZADO DE ACTUALIZACIÓN (Limpia caché al cargar)
     window.onload = function() {
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
         mostrarRegistros();
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                reg.update(); // Fuerza la actualización del Service Worker
+            }).catch(() => {});
         }
     };
 
@@ -125,7 +133,6 @@
             kmCalculadosEntero = Math.round(litros / 0.072);
             kmFinalesSuma = kmBase + kmCalculadosEntero;
             diasEstimados = parseFloat((kmCalculadosEntero / 45).toFixed(1));
-            
             fechaLimiteTxt = calcularFechaFinLaboral(diasEstimados);
             
             document.getElementById('outputKm').innerText = kmCalculadosEntero.toLocaleString('es-ES');
@@ -170,7 +177,7 @@
             dias: diasEstimados + " días",
             fechaFin: fechaLimiteTxt,
             total: kmFinalesSuma + " km",
-            marcadorCargado: marcador + " km"
+            marcadorGuardado: marcador + " km"
         };
 
         let historial = JSON.parse(localStorage.getItem('historialKm')) || [];
