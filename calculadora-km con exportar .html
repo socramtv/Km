@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a73e8">
+    <title>Calculadora de Kilómetros Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/1a73e8/ffffff?text=KM">
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); width: 100%; max-width: 450px; text-align: center; box-sizing: border-box; }
+        h2 { color: #1a73e8; margin-bottom: 15px; font-size: 1.5rem; }
+        
+        .input-box { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 0.8rem; color: #5f6368; font-weight: bold; margin-bottom: 5px; margin-left: 5px; }
+        
+        input { 
+            padding: 15px; font-size: 1.4rem; width: 100%; border: 2px solid #ced4da; border-radius: 12px; 
+            text-align: center; font-weight: bold; outline: none; box-sizing: border-box;
+        }
+        input:focus { border-color: #1a73e8; }
+        .input-small { padding: 10px; font-size: 1.1rem; border-color: #bdc3c7; }
+
+        .btn { width: 100%; padding: 18px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
+        .btn-calc { background-color: #1a73e8; color: white; }
+        .btn-save { background-color: #34a853; color: white; }
+        .btn-share { background-color: #fbbc05; color: white; }
+        .btn-delete { background-color: #ea4335; color: white; margin-top: 10px; padding: 10px; font-size: 0.9rem; }
+
+        /* Botones exportar/importar */
+        .io-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+        .btn-export { background-color: #6c5ce7; color: white; padding: 12px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-import { background-color: #00b894; color: white; padding: 12px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-export:hover { background-color: #5a4bd1; }
+        .btn-import:hover { background-color: #00997e; }
+        #fileInput { display: none; }
+
+        .result-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .result-box { background: #e8f0fe; padding: 12px; border-radius: 12px; border: 1px solid #d2e3fc; }
+        .res-estimado { background: #e6fffa; border-color: #b2f5ea; grid-column: span 2; }
+        
+        .result-label { font-size: 0.75rem; color: #5f6368; font-weight: bold; display: block; }
+        .result-value { font-size: 1.4rem; color: #1967d2; font-weight: bold; }
+        .val-dias { color: #2c7a7b; font-size: 1.8rem; }
+
+        .table-container { width: 100%; max-width: 700px; margin-top: 20px; background: white; border-radius: 15px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.85rem; }
+        th { background: #f8f9fa; color: #5f6368; }
+        .fecha-celda { font-size: 0.75rem; color: #333; font-weight: bold; text-transform: capitalize; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 1.5rem; left: 50%;
+            transform: translateX(-50%) translateY(4rem);
+            background: #333; color: white; font-size: 0.85rem;
+            padding: 0.6rem 1.4rem; border-radius: 8px;
+            z-index: 9999; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Calculadora de kilómetros</h2>
+    
+    <div class="input-box">
+        <label>CANTIDAD DE LITROS</label>
+        <input type="number" id="inputLitros" placeholder="Litros" oninput="calcular()">
+    </div>
+
+    <div class="input-box">
+        <label>KM ACTUALES (MARCADOR)</label>
+        <input type="number" id="inputKmBase" class="input-small" placeholder="Ej: 120500" oninput="calcular()">
+    </div>
+
+    <div class="result-group">
+        <div class="result-box">
+            <span class="result-label">SUMA TOTAL PROYECTADA</span>
+            <div id="outputTotal" class="result-value">0</div>
+        </div>
+        <div class="result-box">
+            <span class="result-label">KM SEGÚN LITROS (ENTERO)</span>
+            <div id="outputKm" class="result-value">0</div>
+        </div>
+        <div class="result-box res-estimado">
+            <span class="result-label">DÍAS ESTIMADOS (45 KM/DÍA)</span>
+            <div id="outputDias" class="result-value val-dias">0.0</div>
+        </div>
+    </div>
+
+    <button class="btn btn-calc" onclick="calcular()">ACTUALIZAR</button>
+    <button class="btn btn-save" onclick="guardar()">GUARDAR REGISTRO</button>
+    <button class="btn btn-share" onclick="compartir()">COMPARTIR DATOS</button>
+
+    <div class="io-row">
+        <button class="btn-export" onclick="exportarJSON()">⬇️ Exportar JSON</button>
+        <button class="btn-import" onclick="document.getElementById('fileInput').click()">⬆️ Importar JSON</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json" onchange="importarJSON(event)">
+
+    <button class="btn btn-delete" onclick="borrarTodo()">BORRAR TODO EL HISTORIAL</button>
+</div>
+
+<div class="table-container">
+    <table id="tablaRegistros">
+        <thead>
+            <tr>
+                <th>Fecha Completa</th>
+                <th>Litros</th>
+                <th>Km/Litros</th>
+                <th>Días Est.</th>
+                <th>Suma Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let kmCalculadosEntero = 0;
+    let kmFinalesSuma = 0;
+    let diasEstimados = 0;
+    let toastTimer;
+
+    window.onload = function() {
+        mostrarRegistros();
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    };
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function calcular() {
+        const litros = parseFloat(document.getElementById('inputLitros').value) || 0;
+        const kmBase = parseFloat(document.getElementById('inputKmBase').value) || 0;
+        
+        if (litros > 0) {
+            kmCalculadosEntero = Math.round(litros / 0.072);
+            kmFinalesSuma = kmBase + kmCalculadosEntero;
+            diasEstimados = (kmCalculadosEntero / 45).toFixed(1);
+            document.getElementById('outputKm').innerText = kmCalculadosEntero.toLocaleString('es-ES');
+            document.getElementById('outputTotal').innerText = kmFinalesSuma.toLocaleString('es-ES');
+            document.getElementById('outputDias').innerText = diasEstimados;
+        } else {
+            document.getElementById('outputKm').innerText = '0';
+            document.getElementById('outputTotal').innerText = '0';
+            document.getElementById('outputDias').innerText = '0.0';
+        }
+    }
+
+    function obtenerFechaCompleta() {
+        return new Date().toLocaleDateString('es-ES', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+        });
+    }
+
+    function guardar() {
+        const litros = document.getElementById('inputLitros').value;
+        if (kmCalculadosEntero === 0) return alert("Por favor, introduce la cantidad de litros.");
+
+        const nuevoRegistro = {
+            fecha: obtenerFechaCompleta(),
+            litros: litros + " L",
+            kmLitros: kmCalculadosEntero + " km",
+            dias: diasEstimados + " días",
+            total: kmFinalesSuma + " km"
+        };
+
+        let historial = JSON.parse(localStorage.getItem('historialKm')) || [];
+        historial.unshift(nuevoRegistro);
+        localStorage.setItem('historialKm', JSON.stringify(historial));
+        mostrarRegistros();
+        showToast("✅ Registro guardado");
+    }
+
+    function mostrarRegistros() {
+        const tabla = document.getElementById('tablaRegistros').getElementsByTagName('tbody')[0];
+        tabla.innerHTML = "";
+        const historial = JSON.parse(localStorage.getItem('historialKm')) || [];
+        historial.forEach(reg => {
+            const fila = tabla.insertRow();
+            fila.innerHTML = `
+                <td class="fecha-celda">${reg.fecha}</td>
+                <td>${reg.litros}</td>
+                <td>${reg.kmLitros}</td>
+                <td>${reg.dias}</td>
+                <td>${reg.total}</td>
+            `;
+        });
+    }
+
+    function borrarTodo() {
+        if (confirm("¿Borrar todo el historial?")) {
+            localStorage.removeItem('historialKm');
+            mostrarRegistros();
+            showToast("🗑️ Historial borrado");
+        }
+    }
+
+    function compartir() {
+        if (kmCalculadosEntero === 0) return alert("Calcula algo primero.");
+        const litros = document.getElementById('inputLitros').value;
+        const texto = `📊 *REGISTRO KM*\n\n📅 *Fecha:* ${obtenerFechaCompleta()}\n⛽ *Litros:* ${litros} L\n🛣️ *Km:* ${kmCalculadosEntero} km\n⏳ *Duración:* ${diasEstimados} días\n🏁 *SUMA TOTAL:* ${kmFinalesSuma} km`;
+        if (navigator.share) {
+            navigator.share({ title: 'Mis Km', text: texto });
+        } else {
+            navigator.clipboard.writeText(texto);
+            showToast("📋 Copiado al portapapeles");
+        }
+    }
+
+    // ── EXPORTAR ──────────────────────────────────────────────
+    function exportarJSON() {
+        const historial = JSON.parse(localStorage.getItem('historialKm')) || [];
+        if (historial.length === 0) return showToast("⚠️ No hay datos que exportar");
+
+        const exportData = {
+            app: "Calculadora de Kilómetros Pro",
+            exportado: new Date().toISOString(),
+            total_registros: historial.length,
+            registros: historial
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const fecha = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `km_historial_${fecha}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`⬇️ Exportados ${historial.length} registros`);
+    }
+
+    // ── IMPORTAR ──────────────────────────────────────────────
+    function importarJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Acepta tanto el formato con wrapper como un array directo
+                let registros = Array.isArray(data) ? data : (data.registros || null);
+
+                if (!registros || !Array.isArray(registros)) {
+                    return showToast("❌ Formato JSON no válido");
+                }
+
+                // Validar que los registros tienen las claves esperadas
+                const claves = ['fecha', 'litros', 'kmLitros', 'dias', 'total'];
+                const valido = registros.every(r => claves.every(k => k in r));
+                if (!valido) return showToast("❌ Los registros no tienen el formato correcto");
+
+                const historialActual = JSON.parse(localStorage.getItem('historialKm')) || [];
+
+                // Fusionar evitando duplicados exactos por fecha+litros
+                const existentes = new Set(historialActual.map(r => r.fecha + r.litros));
+                const nuevos = registros.filter(r => !existentes.has(r.fecha + r.litros));
+
+                const historialFinal = [...nuevos, ...historialActual];
+                localStorage.setItem('historialKm', JSON.stringify(historialFinal));
+                mostrarRegistros();
+                showToast(`⬆️ Importados ${nuevos.length} nuevos registros (${registros.length - nuevos.length} ya existían)`);
+            } catch {
+                showToast("❌ Error al leer el archivo JSON");
+            }
+        };
+        reader.readAsText(file);
+        // Reset para poder reimportar el mismo archivo
+        event.target.value = '';
+    }
+</script>
+
+</body>
+</html>
